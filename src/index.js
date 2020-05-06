@@ -23,11 +23,11 @@ var [canvas, gl] = createCanvas(window.innerWidth, window.innerHeight);
                 force_field_image,
                 1000, /* number of particles */
                 0.5, /* birth rate */
-                1.01, 10.15, /* life range */
+                1.01, 3.15, /* life range */
                 Math.PI/2.0 - 0.5, Math.PI/2.0 + 0.5,
                 // -Math.PI, Math.PI,
-                0.1, 0.8, /* speed range */
-                [0.0, -0.1]); /* gravity */
+                -0.3, 0.3, /* speed range */
+                [0.0, 0.0]); /* gravity */
 
         /* Makes the particle system follow the mouse pointer */
         canvas.onmousemove = function(e) {
@@ -73,6 +73,9 @@ function render(gl, state, timestamp_millis) {
     gl.uniform1f(
         gl.getUniformLocation(state.particle_update_program, "u_TimeDelta"),
         time_delta / 1000.0);
+    gl.uniform1f(
+        gl.getUniformLocation(state.particle_update_program, "u_Time"),
+        state.total_time / 1000.0);
     gl.uniform1f(
         gl.getUniformLocation(state.particle_update_program, "u_TotalTime"),
         state.total_time);

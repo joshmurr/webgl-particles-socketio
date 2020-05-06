@@ -2,6 +2,7 @@
 precision mediump float;
 
 uniform float u_TimeDelta;
+uniform float u_Time;
 uniform sampler2D u_RgNoise;
 uniform vec2 u_Gravity;
 uniform vec2 u_Origin;
@@ -24,7 +25,64 @@ out vec2 v_Velocity;
 vec2 attractorLoc1 = vec2(-0.5,0.0);
 vec2 attractorLoc2 = vec2(0.5,0.0);
 vec2 acceleration = vec2(0.0,0.0);
-float mass = 5000.0;
+float mass = 50.0;
+
+/*
+   vec3 grad(vec3 p) {
+   const float texture_width = 512.0;
+   vec4 v = texture(u_RgNoise, vec2((p.x+p.z) / texture_width, (p.y-p.z) / texture_width));
+   return normalize(v.xyz*2.0 - vec3(1.0));
+   }
+ */
+
+vec2 grad(vec2 p) {
+    const float texture_width = 512.0;
+    vec4 v = texture(u_RgNoise, vec2(p.x / texture_width, p.y / texture_width));
+    return normalize(v.xy*2.0 - vec2(1.0));
+}
+
+/* S-shaped curve for 0 <= t <= 1 */
+float fade(float t) {
+    return t*t*t*(t*(t*6.0 - 15.0) + 10.0);
+}
+
+
+/* 2D noise */
+float noise(vec2 p) {
+    /* Calculate lattice points. */
+    vec2 p0 = floor(p);
+    vec2 p1 = p0 + vec2(1.0, 0.0);
+    vec2 p2 = p0 + vec2(0.0, 1.0);
+    vec2 p3 = p0 + vec2(1.0, 1.0);
+
+    /* Look up gradients at lattice points. */
+    vec2 g0 = grad(p0);
+    vec2 g1 = grad(p1);
+    vec2 g2 = grad(p2);
+    vec2 g3 = grad(p3);
+
+    float t0 = p.x - p0.x;
+    float fade_t0 = fade(t0); /* Used for interpolation in horizontal direction */
+
+    float t1 = p.y - p0.y;
+    float fade_t1 = fade(t1); /* Used for interpolation in vertical direction. */
+
+    /* Calculate dot products and interpolate.*/
+    float p0p1 = (1.0 - fade_t0) * dot(g0, (p - p0)) + fade_t0 * dot(g1, (p - p1)); /* between upper two lattice points */
+    float p2p3 = (1.0 - fade_t0) * dot(g2, (p - p2)) + fade_t0 * dot(g3, (p - p3)); /* between lower two lattice points */
+
+    /* Calculate final result */
+    return (1.0 - fade_t1) * p0p1 + fade_t1 * p2p3;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+    float n = noise(fragCoord.xy/64.0) * 1.0 +
+        noise(fragCoord.xy/32.0) * 0.5 +
+        noise(fragCoord.xy/16.0) * 0.25 +
+        noise(fragCoord.xy/8.0) * 0.125;
+    fragColor = vec4(vec3(n*0.5 + 0.5) , 1.0);
+}
 
 float random (vec2 st) {
     return fract(sin(dot(st.xy, vec2(12.9898,78.233)))* 43758.5453123);
@@ -34,7 +92,7 @@ vec2 attract(vec2 attactor, vec2 loc){
     vec2 dir = attactor - loc;
     float d = length(dir);
     normalize(dir);
-    float force = 500.0/(20.0*d*d);
+    float force = 500.0/(1.0*d*d);
     dir *= force;
     return dir;
 }
@@ -67,7 +125,14 @@ void main(){
         v_Age = i_Age + u_TimeDelta;
         v_Life = i_Life;
         // vec2 force = 4.0 * (2.0 * texture(u_ForceField, i_Position).rg - vec2(1.0));
-        v_Velocity = i_Velocity + acceleration  + u_Gravity * u_TimeDelta;// + force * u_TimeDelta;
+        float n = 
+            noise(i_Position+u_Time/64.0) * 1.0 +
+            noise(i_Position+u_Time/32.0) * 0.5 +
+            noise(i_Position+u_Time/16.0) * 0.25 +
+            noise(i_Position+u_Time/8.0)  * 0.125;
+        vec2 force = vec2(i_Position.x * n, i_Position.y * n);
+        // v_Velocity = i_Velocity * 0.9 + acceleration * u_TimeDelta * 0.005 + u_Gravity * u_TimeDelta + force * u_TimeDelta;
+        v_Velocity = i_Velocity + u_Gravity * u_TimeDelta + force * u_TimeDelta;
         acceleration *= 0.0;
     }
 }
