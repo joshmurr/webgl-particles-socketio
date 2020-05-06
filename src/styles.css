@@ -1,0 +1,23 @@
+* {
+    font-family: sans-serif;
+}
+body {
+    margin: 0;
+}
+canvas {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+}
+
+.overlay {
+    z-index: 100;
+    width: 30vw;
+    display: block;
+    position: absolute;
+    padding: 0.8em;
+    top: 0;
+    left: 0;
+    color: lightgray;
+    background-color: rgba(20, 20, 20, 0.4);
+}
