@@ -1,5 +1,7 @@
 * {
     font-family: sans-serif;
+    /* cursor: crosshair; */
+    cursor: none;
 }
 body {
     margin: 0;

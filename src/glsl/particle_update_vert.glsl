@@ -37,7 +37,7 @@ float mass = 50.0;
 
 vec2 grad(vec2 p) {
     const float texture_width = 512.0;
-    vec4 v = texture(u_RgNoise, vec2(p.x / texture_width, p.y / texture_width));
+    vec4 v = texture(u_RgNoise, vec2(p.x + u_Time*2.0 / texture_width, p.y + u_Time*2.0 / texture_width));
     return normalize(v.xy*2.0 - vec2(1.0));
 }
 
@@ -110,8 +110,8 @@ void main(){
         float x = cos(theta);
         float y = sin(theta);
 
-        // v_Position = u_Origin;
-        v_Position = vec2((random(rand.xy)*2.0)-1.0, (random(rand.yx)*2.0)-1.0);
+        v_Position = u_Origin;
+        // v_Position = vec2((random(rand.xy)*2.0)-1.0, (random(rand.yx)*2.0)-1.0);
 
         v_Age = 0.0;
         v_Life = i_Life;
@@ -126,11 +126,11 @@ void main(){
         v_Life = i_Life;
         // vec2 force = 4.0 * (2.0 * texture(u_ForceField, i_Position).rg - vec2(1.0));
         float n = 
-            noise(i_Position+u_Time/64.0) * 1.0 +
-            noise(i_Position+u_Time/32.0) * 0.5 +
-            noise(i_Position+u_Time/16.0) * 0.25 +
-            noise(i_Position+u_Time/8.0)  * 0.125;
-        vec2 force = vec2(i_Position.x * n, i_Position.y * n);
+            noise(i_Position/64.0) * 1.0 +
+            noise(i_Position/32.0) * 0.5 +
+            noise(i_Position/16.0) * 0.25 +
+            noise(i_Position/8.0)  * 0.125;
+        vec2 force = i_Position*n*50.0;
         // v_Velocity = i_Velocity * 0.9 + acceleration * u_TimeDelta * 0.005 + u_Gravity * u_TimeDelta + force * u_TimeDelta;
         v_Velocity = i_Velocity + u_Gravity * u_TimeDelta + force * u_TimeDelta;
         acceleration *= 0.0;
