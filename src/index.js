@@ -21,13 +21,13 @@ var [canvas, gl] = createCanvas(window.innerWidth, window.innerHeight);
                 [updateVert, passThruFrag],
                 [renderVert, renderFrag],
                 force_field_image,
-                10000, /* number of particles */
+                1000, /* number of particles */
                 0.5, /* birth rate */
-                1.01, 1.15, /* life range */
-                // Math.PI/2.0 - 0.5, Math.PI/2.0 + 0.5, [> direction range <]
-                -Math.PI, Math.PI,
-                0.1, 0.4, /* speed range */
-                [0.0, -0.8]); /* gravity */
+                1.01, 10.15, /* life range */
+                Math.PI/2.0 - 0.5, Math.PI/2.0 + 0.5,
+                // -Math.PI, Math.PI,
+                0.1, 0.8, /* speed range */
+                [0.0, -0.1]); /* gravity */
 
         /* Makes the particle system follow the mouse pointer */
         canvas.onmousemove = function(e) {
