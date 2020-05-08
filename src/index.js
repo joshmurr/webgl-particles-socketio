@@ -7,7 +7,7 @@ import { createCanvas, createOverlay, initShaderProgram,  randomRGdata, initialP
 import './styles.css';
 import FFImage from './images/rgperlin.png';
 
-(function main() {
+window.onload = function main() {
     var [canvas, gl] = createCanvas(window.innerWidth, window.innerHeight);
     var force_field_image = new Image();
     force_field_image.src = FFImage;
@@ -54,13 +54,15 @@ import FFImage from './images/rgperlin.png';
             const y = -(2.0 * (e.pageY - this.offsetTop)/this.height - 1.0);
         };
 
+        console.log(system1, system2);
+
         function draw(now) {
             render(gl, [system1, system2], now);
             window.requestAnimationFrame(draw);
         }
         window.requestAnimationFrame(draw);
     }
-})();
+};
 
 
 function render(gl, states, timestamp_millis) {
@@ -173,3 +175,4 @@ function render(gl, states, timestamp_millis) {
         state.write = tmp;
     }
 }
+
