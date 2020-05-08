@@ -3,7 +3,7 @@ var passThruFrag = require('./glsl/passthru_frag.glsl');
 var renderFrag = require('./glsl/particle_render_frag.glsl');
 var renderVert = require('./glsl/particle_render_vert.glsl');
 import { mat4, vec3 } from "gl-matrix";
-import { createCanvas, createOverlay, initShaderProgram,  randomRGdata, initialParticleData, init } from "./setup";
+import { createCanvas, createOverlay, initShaderProgram,  randomRGdata, initialParticleData, initWorld, init } from "./setup";
 import './styles.css';
 import FFImage from './images/rgperlin.png';
 
@@ -12,19 +12,19 @@ import FFImage from './images/rgperlin.png';
     var force_field_image = new Image();
     force_field_image.src = FFImage;
     force_field_image.onload = function(){
+        var world = initWorld(gl, force_field_image, [0.0, 0.0]);
         var state =
             init(
                 gl,
                 [updateVert, passThruFrag],
                 [renderVert, renderFrag],
-                force_field_image,
                 1000, /* number of particles */
                 0.5, /* birth rate */
                 1.01, 1.45, /* life range */
                 // Math.PI/2.0 - 0.5, Math.PI/2.0 + 0.5,
                 -Math.PI, Math.PI,
                 -0.3, 0.3, /* speed range */
-                [0.0, 0.0]); /* gravity */
+            ); /* gravity */
 
         /* Makes the particle system follow the mouse pointer */
         canvas.onmousemove = function(e) {
@@ -37,12 +37,12 @@ import FFImage from './images/rgperlin.png';
             const y = -(2.0 * (e.pageY - this.offsetTop)/this.height - 1.0);
         };
         window.requestAnimationFrame(
-            function(ts) { render(gl, state, ts); });
+            function(ts) { render(gl, world, state, ts); });
     }
 })();
 
 
-function render(gl, state, timestamp_millis) {
+function render(gl, world, state, timestamp_millis) {
     var num_part = state.born_particles;
 
     /* Calculate time delta. */
@@ -82,7 +82,7 @@ function render(gl, state, timestamp_millis) {
         state.total_time);
     gl.uniform2f(
         gl.getUniformLocation(state.particle_update_program, "u_Gravity"),
-        state.gravity[0], state.gravity[1]);
+        world.gravity[0], world.gravity[1]);
 
     // PARTICLE SYSTEM SPECIFIC UNIFORMS --------------------------------------
     gl.uniform2f(
@@ -107,12 +107,12 @@ function render(gl, state, timestamp_millis) {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, state.rg_noise);
     gl.uniform1i(
-        gl.getUniformLocation(state.particle_update_program, "u_RgNoise"),
+        gl.getUniformLocation(world.particle_update_program, "u_RgNoise"),
         0);
     gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, state.force_field);
+    gl.bindTexture(gl.TEXTURE_2D, world.force_field);
     gl.uniform1i(
-        gl.getUniformLocation(state.particle_update_program, "u_ForceField"),
+        gl.getUniformLocation(world.particle_update_program, "u_ForceField"),
         1);
 
 

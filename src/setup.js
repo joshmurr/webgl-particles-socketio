@@ -127,8 +127,42 @@ export function setupParticleBufferVAO(gl, buffers, vao){
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 }
 
-export function init(gl, programOne, programTwo, force_field_image, num_particles, particle_birth_rate, min_age, max_age,
-    min_theta, max_theta, min_speed, max_speed, gravity){
+export function initWorld(gl, force_field_image, gravity){
+    /* Create a texture for random values. */
+    const rg_noise_texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, rg_noise_texture);
+    gl.texImage2D(gl.TEXTURE_2D,
+        0,
+        gl.RG8,
+        512, 512,
+        0,
+        gl.RG,
+        gl.UNSIGNED_BYTE,
+        randomRGData(512, 512));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+    const force_field_texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, force_field_texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB8, gl.RGB, gl.UNSIGNED_BYTE, force_field_image);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    return {
+        gravity: gravity,
+        rg_noise: rg_noise_texture,
+        force_field: force_field_texture,
+    };
+}
+
+export function init(gl, programOne, programTwo, num_particles, particle_birth_rate, min_age, max_age,
+    min_theta, max_theta, min_speed, max_speed){
     if(max_age < min_age) throw "Invalid age range";
     if (max_theta < min_theta || min_theta < -Math.PI || max_theta > Math.PI) throw "Invalid theta range.";
 
@@ -242,31 +276,6 @@ export function init(gl, programOne, programTwo, force_field_image, num_particle
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
-    /* Create a texture for random values. */
-    const rg_noise_texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, rg_noise_texture);
-    gl.texImage2D(gl.TEXTURE_2D,
-        0,
-        gl.RG8,
-        512, 512,
-        0,
-        gl.RG,
-        gl.UNSIGNED_BYTE,
-        randomRGData(512, 512));
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
-    const force_field_texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, force_field_texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB8, gl.RGB, gl.UNSIGNED_BYTE, force_field_image);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
 
     /* Set up blending */
@@ -282,16 +291,14 @@ export function init(gl, programOne, programTwo, force_field_image, num_particle
         particle_render_program: render_program,
         num_particles: initial_data.length / 6,
         old_timestamp: 0.0,
-        rg_noise: rg_noise_texture,
         total_time: 0.0,
         born_particles: 0,
         birth_rate: particle_birth_rate,
-        gravity: gravity,
         origin: [0.0, 0.0],
         min_theta: min_theta,
         max_theta: max_theta,
         min_speed: min_speed,
         max_speed: max_speed,
-        force_field: force_field_texture,
     };
+
 }
