@@ -7,11 +7,8 @@ import { createCanvas, createOverlay, initShaderProgram,  randomRGdata, initialP
 import './styles.css';
 import FFImage from './images/rgperlin.png';
 
-var width = window.innerWidth;
-var height = window.innerHeight;
-var [canvas, gl] = createCanvas(window.innerWidth, window.innerHeight);
-
 (function main() {
+    var [canvas, gl] = createCanvas(window.innerWidth, window.innerHeight);
     var force_field_image = new Image();
     force_field_image.src = FFImage;
     force_field_image.onload = function(){
@@ -31,9 +28,13 @@ var [canvas, gl] = createCanvas(window.innerWidth, window.innerHeight);
 
         /* Makes the particle system follow the mouse pointer */
         canvas.onmousemove = function(e) {
-            var x = 2.0 * (e.pageX - this.offsetLeft)/this.width - 1.0;
-            var y = -(2.0 * (e.pageY - this.offsetTop)/this.height - 1.0);
+            const x = 2.0 * (e.pageX - this.offsetLeft)/this.width - 1.0;
+            const y = -(2.0 * (e.pageY - this.offsetTop)/this.height - 1.0);
             state.origin = [x, y];
+        };
+        canvas.onmouseup = function(e) {
+            const x = 2.0 * (e.pageX - this.offsetLeft)/this.width - 1.0;
+            const y = -(2.0 * (e.pageY - this.offsetTop)/this.height - 1.0);
         };
         window.requestAnimationFrame(
             function(ts) { render(gl, state, ts); });
@@ -82,6 +83,8 @@ function render(gl, state, timestamp_millis) {
     gl.uniform2f(
         gl.getUniformLocation(state.particle_update_program, "u_Gravity"),
         state.gravity[0], state.gravity[1]);
+
+    // PARTICLE SYSTEM SPECIFIC UNIFORMS --------------------------------------
     gl.uniform2f(
         gl.getUniformLocation(state.particle_update_program, "u_Origin"),
         state.origin[0],
@@ -98,6 +101,8 @@ function render(gl, state, timestamp_millis) {
     gl.uniform1f(
         gl.getUniformLocation(state.particle_update_program, "u_MaxSpeed"),
         state.max_speed);
+    // ------------------------------------------------------------------------
+
     state.total_time += time_delta;
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, state.rg_noise);

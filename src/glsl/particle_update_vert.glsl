@@ -5,18 +5,26 @@ uniform float u_TimeDelta;
 uniform float u_Time;
 uniform sampler2D u_RgNoise;
 uniform vec2 u_Gravity;
+
+// PARTICLE SPECIFIC ----------
 uniform vec2 u_Origin;
 uniform float u_MinTheta;
 uniform float u_MaxTheta;
 uniform float u_MinSpeed;
 uniform float u_MaxSpeed;
+// ----------------------------
+
 uniform sampler2D u_ForceField;
 
+// PARTICLE SPECIFIC ----------
 in vec2 i_Position;
 in float i_Age;
 in float i_Life;
 in vec2 i_Velocity;
+// ----------------------------
 
+
+// Transform Feedback Varyings
 out vec2 v_Position;
 out float v_Age;
 out float v_Life;
@@ -26,14 +34,6 @@ vec2 attractorLoc1 = vec2(-0.5,0.0);
 vec2 attractorLoc2 = vec2(0.5,0.0);
 vec2 acceleration = vec2(0.0,0.0);
 float mass = 50.0;
-
-/*
-   vec3 grad(vec3 p) {
-   const float texture_width = 512.0;
-   vec4 v = texture(u_RgNoise, vec2((p.x+p.z) / texture_width, (p.y-p.z) / texture_width));
-   return normalize(v.xyz*2.0 - vec3(1.0));
-   }
- */
 
 vec2 grad(vec2 p) {
     const float texture_width = 512.0;
@@ -73,15 +73,6 @@ float noise(vec2 p) {
 
     /* Calculate final result */
     return (1.0 - fade_t1) * p0p1 + fade_t1 * p2p3;
-}
-
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
-{
-    float n = noise(fragCoord.xy/64.0) * 1.0 +
-        noise(fragCoord.xy/32.0) * 0.5 +
-        noise(fragCoord.xy/16.0) * 0.25 +
-        noise(fragCoord.xy/8.0) * 0.125;
-    fragColor = vec4(vec3(n*0.5 + 0.5) , 1.0);
 }
 
 float random (vec2 st) {
@@ -132,7 +123,7 @@ void main(){
             noise(i_Position/8.0)  * 0.125;
         vec2 force = i_Position*n*50.0;
         // v_Velocity = i_Velocity * 0.9 + acceleration * u_TimeDelta * 0.005 + u_Gravity * u_TimeDelta + force * u_TimeDelta;
-        v_Velocity = i_Velocity + u_Gravity * u_TimeDelta + force * u_TimeDelta;
+        v_Velocity = i_Velocity + acceleration * u_TimeDelta * 0.1 + u_Gravity * u_TimeDelta + force * u_TimeDelta;
         acceleration *= 0.0;
     }
 }
