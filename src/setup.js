@@ -30,6 +30,16 @@ export function createOverlay(){
     body.appendChild(container);
 }
 
+export function generateUID(){
+    let text = '';
+    let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    for (let i = 0; i < 15; i++){
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    localStorage.setItem('UID', text);
+    return text;
+}
+
 export function initShaderProgram(gl, vsSource, fsSource, transformFeedbackVaryings) {
     const shaderProgram = gl.createProgram();
     const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
@@ -295,3 +305,4 @@ export function init(gl, programOne, programTwo, force_field_image, num_particle
         force_field: force_field_texture,
     };
 }
+
