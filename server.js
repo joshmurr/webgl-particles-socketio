@@ -8,6 +8,58 @@ app.use(express.static(__dirname + '/dist'));
 
 let users = {};
 
+getUsers = () => {
+    return Object.keys(users).map(function(key){
+        return users[key].uid;
+    });
+};
+
+createSocket = (user) => {
+    let cur_user = users[user.uid];
+    let updated_user = {
+        [user.uid] : Object.assign(cur_user, {
+            sockets : [...cur_user.sockets, user.socket_id]
+        })
+    };
+    users = Object.assign(users, updated_user);
+};
+
+createUser = (user) => {
+    users = Object.assign({
+        [user.uid] : {
+            uid : user.uid,
+            sockets : [user.socket_id],
+        }
+    }, users)
+};
+
+removeSocket = (socket_id) => {
+    let uid = '';
+    Object.keys(users).map(function(key){
+        let sockets = users[key].sockets;
+        if(sockets.indexOf(socket_id) !== -1){
+            uid = key;
+        }
+    });
+    let user = users[uid];
+    if(user.sockets.length > 1){
+        // Remove only the socket
+        let index = user.sockets.indexOf(socket_id);
+        let updated_user = {
+            [uid] : Object.assign(user, {
+                sockets : user.sockets.slice(0, index).concat(user.sockets.slice(index+1))
+
+            })
+        }
+        users = Object.assign(users, updated_user);
+    } else {
+        // Remove user by key
+        let clone_users = Object.assign({}, users);
+        delete clone_users[uid];
+        users = clone_users;
+    }
+};
+
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
@@ -23,18 +75,18 @@ io.on('connection', (socket) => {
         socket_id: socket.id
     };
 
-    console.log(`User connected, UID: ${user.uid}, Socket ID: ${user.socket_id}`);
+    // console.log(`User connected, UID: ${user.uid}, Socket ID: ${user.socket_id}`);
 
-    // if(users[user.uid] !== undefined){
-        // createSocket(user);
-        // socket.emit('updateUsersList', getUsers());
-    // } else {
-        // createUser(user);
-        // io.emit('updateUsersList', getUsers());
-    // }
+    if(users[user.uid] !== undefined){
+        createSocket(user);
+        socket.emit('updateUsersList', getUsers());
+    } else {
+        createUser(user);
+        io.emit('updateUsersList', getUsers());
+    }
 
-    socket.on('particleSystem', (data) => {
-        socket.broadcast.emit('particleSystem', {
+    socket.on('updateParticleSystem', (data) => {
+        socket.broadcast.emit('newLocations', {
             uid: data.uid,
             location: data.location,
         });

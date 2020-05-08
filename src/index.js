@@ -8,6 +8,7 @@ var renderFrag = require('./glsl/particle_render_frag.glsl');
 var renderVert = require('./glsl/particle_render_vert.glsl');
 
 var particleSystems = {};
+let newUser = false;
 var socket = null;
 
 window.onload = function main() {
@@ -15,8 +16,8 @@ window.onload = function main() {
     var force_field_image = new Image();
     force_field_image.src = FFImage;
 
-    // const UID = localStorage.getItem('UID') ? localStorage.getItem('UID') : generateUID();
-    const UID = generateUID();
+    const UID = localStorage.getItem('UID') ? localStorage.getItem('UID') : generateUID();
+    // const UID = generateUID();
     initUserSocket(UID);
 
     force_field_image.onload = function(){
@@ -29,21 +30,25 @@ window.onload = function main() {
             const x = 2.0 * (e.pageX - this.offsetLeft)/this.width - 1.0;
             const y = -(2.0 * (e.pageY - this.offsetTop)/this.height - 1.0);
             particleSystems[UID].origin = [x, y];
-            socket.emit('particleSystem', {
+            socket.emit('updateParticleSystem', {
                 uid: UID,
                 location: [x,y],
             });
         };
 
         function draw(now) {
-            socket.on('particleSystem', function(data) {
-                const newUID = data.uid;
-                if(newUID !== UID){
-                    if(!particleSystems[newUID]){
-                        particleSystems[newUID] = generateParticleSystem(gl, force_field_image);
-                    } else {
-                        particleSystems[newUID].origin = data.location;
+            socket.on('updateUsersList', function(users) {
+                newUser = true;
+                if(newUser){
+                    for(const user of users){
+                        particleSystems[user] = particleSystems[user] ? particleSystems[user] : generateParticleSystem(gl, force_field_image);
                     }
+                }
+                newUser = false;
+            });
+            socket.on('newLocations', function(data) {
+                if(data.uid !== UID && particleSystems[data.uid]){
+                    particleSystems[data.uid].origin = data.location;
                 }
             });
             render(gl, particleSystems, now);
