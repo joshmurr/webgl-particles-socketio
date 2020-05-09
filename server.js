@@ -77,6 +77,12 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '/index.html'));
 });
 
+app.get("/get", (req, res, next) => {
+    res.json({
+        "version": process.env.VERSION
+    });
+});
+
 server.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });

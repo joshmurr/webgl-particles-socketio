@@ -1,6 +1,5 @@
 import { createCanvas, createOverlay, initShaderProgram,  randomRGdata, initialParticleData, init, generateUID } from "./setup";
 import io from 'socket.io-client';
-import socketIOClient from 'socket.io-client';
 import './styles.css';
 import FFImage from './images/rgperlin.png';
 var updateVert = require('./glsl/particle_update_vert.glsl');
@@ -25,21 +24,25 @@ window.onload = function main() {
 
         particleSystems[UID] = userSystem;
 
+        console.log(particleSystems);
+
         /* Makes the particle system follow the mouse pointer */
         canvas.onmousemove = function(e) {
             const x = 2.0 * (e.pageX - this.offsetLeft)/this.width - 1.0;
             const y = -(2.0 * (e.pageY - this.offsetTop)/this.height - 1.0);
-            particleSystems[UID].origin = [x, y];
-            socket.emit('updateParticleSystem', {
-                uid: UID,
-                location: [x,y],
-            });
+            if(particleSystems[UID]) {
+                particleSystems[UID].origin = [x, y];
+                socket.emit('updateParticleSystem', {
+                    uid: UID,
+                    location: particleSystems[UID].origin,
+                });
+            }
         };
 
         function draw(now) {
             socket.on('updateUsersList', function(users) {
                 for(const user of users){
-                    if(!particleSystems.hasOwnProperty(user)){
+                    if(user && !particleSystems.hasOwnProperty(user)){
                         // New User
                         particleSystems[user] = generateParticleSystem(gl, force_field_image);
                     }
