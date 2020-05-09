@@ -5,45 +5,14 @@
         "src": "index.js",
         "use": "@now/node-server"
     }],
-    "static": {
-        "headers": [
-            {
-                "source": "**/*.@(html)",
-                "headers": [
-                    {
-                        "key": "Referrer-Policy",
-                        "value": "no-referrer-when-downgrade"
-                    },
-                    {
-                        "key": "Content-Security-Policy",
-                        "value": "default-src https:; img-src https: data:; report-uri https://TODO-GET-YOUR-OWN-ACCOUNT.report-uri.com/r/d/csp/enforce"
-                    },
-                    {
-                        "key": "X-XSS-Protection",
-                        "value": "1; mode=block"
-                    },
-                    {
-                        "key": "Feature-Policy",
-                        "value": "geolocation 'self'; notifications 'self'; push 'self'; microphone 'self'; camera 'self'"
-                    }
-                ]
-            }, {
-            "source": "*",
-            "headers": [
-                {
-                    "key": "Strict-Transport-Security",
-                    "value": "max-age=31536000"
-                },
-                {
-                    "key": "X-Content-Type-Options",
-                    "value": "nosniff"
-                },
-                {
-                    "key": "X-Frame-Options",
-                    "value": "SAMEORIGIN"
-                }
-            ]
-            }
-        ]
-    }
+    "routes": [{
+        "headers": {
+            "X-Content-Type-Options": "none",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Accept"
+        },
+        "src": "/.*",
+        "dest": "/index.js"
+    }]
 }
