@@ -9,7 +9,6 @@
         "watch": "webpack --watch",
         "dev-server": "nodemon server.js",
         "dev-init": "cross-env NODE_ENV=development webpack --config webpack.config.js",
-        "now-build" : "node index.js"
     },
     "nodemonConfig": {
         "ignore": [
