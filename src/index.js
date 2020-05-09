@@ -1,4 +1,5 @@
 import { createCanvas, createOverlay, initShaderProgram,  randomRGdata, initialParticleData, init, generateUID } from "./setup";
+import io from 'socket.io-client';
 import socketIOClient from 'socket.io-client';
 import './styles.css';
 import FFImage from './images/rgperlin.png';
@@ -8,8 +9,7 @@ var renderFrag = require('./glsl/particle_render_frag.glsl');
 var renderVert = require('./glsl/particle_render_vert.glsl');
 
 var particleSystems = {};
-let newUser = false;
-var socket = null;
+var socket = io();
 
 window.onload = function main() {
     var [canvas, gl] = createCanvas(window.innerWidth, window.innerHeight);
@@ -18,7 +18,7 @@ window.onload = function main() {
 
     const UID = localStorage.getItem('UID') ? localStorage.getItem('UID') : generateUID();
     // const UID = generateUID();
-    initUserSocket(UID);
+    // initUserSocket(UID);
 
     force_field_image.onload = function(){
         var userSystem = generateParticleSystem(gl, force_field_image);

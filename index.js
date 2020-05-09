@@ -2,7 +2,9 @@ let express = require('express');
 let app = require('express')();
 let server = require('http').Server(app);
 let io = require('socket.io')(server);
-let port = 8989;
+let path = require('path');
+
+const port = process.env.PORT || 8989;
 
 app.use(express.static(__dirname + '/dist'));
 
@@ -19,11 +21,9 @@ getUserToRemove = (socket_id) => {
     Object.keys(users).map(function(key){
         let sockets = users[key].sockets;
         if(sockets.indexOf(socket_id) !== -1){
-            console.log(key);
             uid = key;
         }
     });
-    console.log(`Removing user: ${uid}`);
     return uid;
 };
 
@@ -74,11 +74,11 @@ removeSocket = (socket_id) => {
 };
 
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+    res.sendFile(path.join(__dirname, '/index.html'));
 });
 
 server.listen(port, () => {
-    console.log('Running server on 127.0.0.1:' + port);
+    console.log(`Listening on port ${port}`);
 });
 
 io.on('connection', (socket) => {
