@@ -181,12 +181,12 @@ export function init(gl, programOne, programTwo, force_field_image, num_particle
             type: gl.FLOAT
         },
         i_Age: {
-            location: gl.getAttribLocation(update_program, "i_Age"),
+            location: gl.getAttribLocation(render_program, "i_Age"),
             num_components: 1,
             type: gl.FLOAT
         },
         i_Life: {
-            location: gl.getAttribLocation(update_program, "i_Life"),
+            location: gl.getAttribLocation(render_program, "i_Life"),
             num_components: 1,
             type: gl.FLOAT
         },

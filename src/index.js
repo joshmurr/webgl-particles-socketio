@@ -178,8 +178,6 @@ function initUserSocket(UID){
         socket = socketIOClient('ws://localhost:8989', {
             query : 'uid='+UID
         });
-        // socket.on('particleSystem', ps => particleSystems.push(ps));
-        // socket.on('particleSystem', ps => console.log(ps));
     }
 }
 
