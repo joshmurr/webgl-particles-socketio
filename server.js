@@ -14,6 +14,19 @@ getUsers = () => {
     });
 };
 
+getUserToRemove = (socket_id) => {
+    let uid = '';
+    Object.keys(users).map(function(key){
+        let sockets = users[key].sockets;
+        if(sockets.indexOf(socket_id) !== -1){
+            console.log(key);
+            uid = key;
+        }
+    });
+    console.log(`Removing user: ${uid}`);
+    return uid;
+};
+
 createSocket = (user) => {
     let cur_user = users[user.uid];
     let updated_user = {
@@ -74,8 +87,6 @@ io.on('connection', (socket) => {
         uid: query.uid,
         socket_id: socket.id
     };
-
-    // console.log(`User connected, UID: ${user.uid}, Socket ID: ${user.socket_id}`);
 
     if(users[user.uid] !== undefined){
         createSocket(user);

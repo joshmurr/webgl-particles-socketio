@@ -38,16 +38,23 @@ window.onload = function main() {
 
         function draw(now) {
             socket.on('updateUsersList', function(users) {
-                newUser = true;
-                if(newUser){
-                    for(const user of users){
-                        particleSystems[user] = particleSystems[user] ? particleSystems[user] : generateParticleSystem(gl, force_field_image);
+                for(const user of users){
+                    if(!particleSystems.hasOwnProperty(user)){
+                        // New User
+                        particleSystems[user] = generateParticleSystem(gl, force_field_image);
                     }
                 }
-                newUser = false;
+                for(const uid in particleSystems){
+                    // Remove User
+                    if(users.indexOf(uid) === -1){
+                        let clone = Object.assign({}, particleSystems);
+                        delete clone[uid];
+                        particleSystems = clone;
+                    }
+                }
             });
             socket.on('newLocations', function(data) {
-                if(data.uid !== UID && particleSystems[data.uid]){
+                if(data.uid !== UID && particleSystems.hasOwnProperty(data.uid)){
                     particleSystems[data.uid].origin = data.location;
                 }
             });
