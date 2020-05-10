@@ -9,7 +9,8 @@
         "watch": "webpack --watch",
         "dev-server": "nodemon index.js",
         "dev-init": "cross-env NODE_ENV=development webpack --config webpack.config.js",
-        "prod": "cross-env NODE_ENV=production webpack --config webpack.config.js"
+        "prod": "cross-env NODE_ENV=production webpack --config webpack.config.js",
+        "start": "node index.js"
     },
     "nodemonConfig": {
         "ignore": [
