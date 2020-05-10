@@ -6,12 +6,11 @@ var updateVert = require('./glsl/particle_update_vert.glsl');
 var passThruFrag = require('./glsl/passthru_frag.glsl');
 var renderFrag = require('./glsl/particle_render_frag.glsl');
 var renderVert = require('./glsl/particle_render_vert.glsl');
-
-var particleSystems = {};
 var socket = io();
 
 window.onload = function main() {
     var [canvas, gl] = createCanvas(window.innerWidth, window.innerHeight);
+    var particleSystems = {};
     var force_field_image = new Image();
     force_field_image.src = FFImage;
 
@@ -19,48 +18,63 @@ window.onload = function main() {
     // const UID = generateUID();
     // initUserSocket(UID);
 
+    socket.emit("newUser", UID);
+
     force_field_image.onload = function(){
         var userSystem = generateParticleSystem(gl, force_field_image);
 
         particleSystems[UID] = userSystem;
 
-        console.log(particleSystems);
+        console.log(`Current User: ${UID}`);
 
         /* Makes the particle system follow the mouse pointer */
         canvas.onmousemove = function(e) {
             const x = 2.0 * (e.pageX - this.offsetLeft)/this.width - 1.0;
             const y = -(2.0 * (e.pageY - this.offsetTop)/this.height - 1.0);
-            if(particleSystems[UID]) {
-                particleSystems[UID].origin = [x, y];
-                socket.emit('updateParticleSystem', {
-                    uid: UID,
-                    location: particleSystems[UID].origin,
-                });
-            }
+            particleSystems[UID].origin = [x, y];
+            socket.emit('updateParticleSystem', {
+                uid: UID,
+                location: [x, y],
+            });
         };
 
+        socket.on('updateParticleSystems', (users) => {
+            // Users = {
+            //   socket.id : {
+            //      location : [x, y],
+            //      uid : UID,
+            //   }
+            // }
+            let allUsers = Object.keys(users).map(key => users[key].uid);
+            let allPs = Object.keys(particleSystems);
+            if(Object.keys(users).length < Object.keys(particleSystems).length) {
+                // There are particleSystems to remove
+                const uidsToRemove = allPs.filter(r => !allUsers.includes(r));
+                console.log(uidsToRemove);
+                for(const remove of uidsToRemove){
+                    if(particleSystems.hasOwnProperty(remove)){
+                        let clone_ps = Object.assign({}, particleSystems);
+                        delete clone_ps[remove];
+                        particleSystems = clone_ps;
+                    }
+                }
+            } else {
+                // Iterate of users OBJECT
+                for(const user in users){
+                    if(users.hasOwnProperty(user)){
+                        if(!particleSystems.hasOwnProperty(users[user].uid)){
+                            // Add particle system if needed
+                            particleSystems[users[user].uid] = generateParticleSystem(gl, force_field_image);
+                        } else {
+                            particleSystems[users[user].uid].origin = users[user].location;
+                        }
+                    }
+                }
+            }
+        });
+
+
         function draw(now) {
-            socket.on('updateUsersList', function(users) {
-                for(const user of users){
-                    if(user && !particleSystems.hasOwnProperty(user)){
-                        // New User
-                        particleSystems[user] = generateParticleSystem(gl, force_field_image);
-                    }
-                }
-                for(const uid in particleSystems){
-                    // Remove User
-                    if(users.indexOf(uid) === -1){
-                        let clone = Object.assign({}, particleSystems);
-                        delete clone[uid];
-                        particleSystems = clone;
-                    }
-                }
-            });
-            socket.on('newLocations', function(data) {
-                if(data.uid !== UID && particleSystems.hasOwnProperty(data.uid)){
-                    particleSystems[data.uid].origin = data.location;
-                }
-            });
             render(gl, particleSystems, now);
             window.requestAnimationFrame(draw);
         }

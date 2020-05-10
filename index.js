@@ -12,75 +12,15 @@ let users = {};
 
 getUsers = () => {
     return Object.keys(users).map(function(key){
-        return users[key].uid;
-    });
-};
-
-getUserToRemove = (socket_id) => {
-    let uid = '';
-    Object.keys(users).map(function(key){
-        let sockets = users[key].sockets;
-        if(sockets.indexOf(socket_id) !== -1){
-            uid = key;
+        return {
+            uid : users[key].uid,
+            location : users[key].location,
         }
     });
-    return uid;
-};
-
-createSocket = (user) => {
-    let cur_user = users[user.uid];
-    let updated_user = {
-        [user.uid] : Object.assign(cur_user, {
-            sockets : [...cur_user.sockets, user.socket_id]
-        })
-    };
-    users = Object.assign(users, updated_user);
-};
-
-createUser = (user) => {
-    users = Object.assign({
-        [user.uid] : {
-            uid : user.uid,
-            sockets : [user.socket_id],
-        }
-    }, users)
-};
-
-removeSocket = (socket_id) => {
-    let uid = '';
-    Object.keys(users).map(function(key){
-        let sockets = users[key].sockets;
-        if(sockets.indexOf(socket_id) !== -1){
-            uid = key;
-        }
-    });
-    let user = users[uid];
-    if(user.sockets.length > 1){
-        // Remove only the socket
-        let index = user.sockets.indexOf(socket_id);
-        let updated_user = {
-            [uid] : Object.assign(user, {
-                sockets : user.sockets.slice(0, index).concat(user.sockets.slice(index+1))
-
-            })
-        }
-        users = Object.assign(users, updated_user);
-    } else {
-        // Remove user by key
-        let clone_users = Object.assign({}, users);
-        delete clone_users[uid];
-        users = clone_users;
-    }
 };
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '/index.html'));
-});
-
-app.get("/get", (req, res, next) => {
-    res.json({
-        "version": process.env.VERSION
-    });
 });
 
 server.listen(port, () => {
@@ -88,29 +28,26 @@ server.listen(port, () => {
 });
 
 io.on('connection', (socket) => {
-    let query = socket.request._query;
-    let user = {
-        uid: query.uid,
-        socket_id: socket.id
-    };
-
-    if(users[user.uid] !== undefined){
-        createSocket(user);
-        socket.emit('updateUsersList', getUsers());
-    } else {
-        createUser(user);
-        io.emit('updateUsersList', getUsers());
-    }
+    socket.on("newUser", (data) => {
+        console.log(`Adding new user on socket: ${socket.id}, UID: ${data}`);
+        users[socket.id] = {
+            location : null,
+            uid: data,
+        };
+    });
 
     socket.on('updateParticleSystem', (data) => {
-        socket.broadcast.emit('newLocations', {
-            uid: data.uid,
-            location: data.location,
-        });
+        if(users[socket.id]){
+            users[socket.id].location = data.location;
+            socket.broadcast.emit('updateParticleSystems', users);
+        } 
     });
 
     socket.on('disconnect', () => {
-        removeSocket(socket.id);
-        io.emit('updateUsersList', getUsers());
+        console.log("Removing user");
+        let clone_users = Object.assign({}, users);
+        delete clone_users[socket.id];
+        users = clone_users;
+        socket.broadcast.emit('updateParticleSystems', users);
     });
 });
